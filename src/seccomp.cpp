@@ -1,4 +1,4 @@
-#include <devops/seccomp.hpp>
+#include <seccomp.hpp>
 
 #ifdef __linux__
 #include <seccomp.h>

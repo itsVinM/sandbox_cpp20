@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 
-#include "devops/log_aggregator.hpp"
-#include "devops/metrics.hpp"
+#include "log_aggregator.hpp"
+#include "metrics.hpp"
 
 // ── MetricsExporter ──────────────────────────────────────────────────────
 

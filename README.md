@@ -49,7 +49,7 @@ job producer        sandbox daemon                          per-job sandbox
           ◄── job_result (exit_code, duration_ms)
 ```
 
-Job flow, as implemented in `devops/main.cpp`:
+Job flow, as implemented in `src/main.cpp`:
 
 1. register as a sandbox worker (`sandbox register <id> <type> <addr>`)
 2. poll for work (`job next`)
@@ -133,7 +133,7 @@ available on `RedisClient` directly.
 
 ## Configuration
 
-`SandboxConfig` (see `devops/sandbox.hpp`):
+`SandboxConfig` (see `include/sandbox.hpp`):
 
 | Field               | Default        | Meaning                                  |
 | ------------------- | -------------- | ---------------------------------------- |
@@ -178,17 +178,18 @@ A build from copied sources is a real result; a bind mount over a stale host
 Two source folders, both at the root:
 
 ```
-CMakeLists.txt          the project root is the include dir, so <devops/x.hpp> resolves
+CMakeLists.txt          include/ is the include dir, so headers include as <x.hpp>
 Dockerfile              build stages: native, cross-win, cross-mac, runtime
 compose.yaml            the runtime, the functional test, the matrix
-devops/                 the daemon and the sandbox engine; each component's .hpp
-                        sits next to its .cpp
+include/                the nine public headers
+src/                    the daemon, the sandbox engine, the sidecars
 tests/                  unit tests, the cross-compile fixture, the functional test
 ```
 
-`include/` and `src/` are gone: at this size, separating them only meant
-`include/devops/` and `src/` for files that always travel in pairs, and the
-`devops/` name is what the include path already keys off.
+There is no `devops/` subfolder. It only ever added a path segment, and it
+made every include `<devops/sandbox.hpp>` instead of `<sandbox.hpp>`. The
+`devops::` namespace and the `/devops-<id>` cgroup name are unrelated to the
+directory layout and stayed as they were.
 
 ## Known limitations
 

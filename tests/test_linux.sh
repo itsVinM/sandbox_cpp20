@@ -17,10 +17,8 @@ echo "== ctest =="
 ctest --test-dir "$root/build" --output-on-failure
 
 echo "== sandbox_smoke (real namespaces/cgroup/seccomp) =="
-# -I "$root" because the project root is the include dir: that is what makes
-# <devops/sandbox.hpp> resolve.
-g++ -std=c++20 -I "$root" "$root/tests/smoke.cpp" \
-    "$root/devops/sandbox.cpp" -o /tmp/sandbox_smoke -lseccomp -pthread
+g++ -std=c++20 -I "$root/include" "$root/tests/smoke.cpp" \
+    "$root/src/sandbox.cpp" -o /tmp/sandbox_smoke -lseccomp -pthread
 /tmp/sandbox_smoke
 
 echo "== built sandbox executable =="

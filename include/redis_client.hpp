@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <devops/result.hpp>
+#include <result.hpp>
 
 namespace devops {
 

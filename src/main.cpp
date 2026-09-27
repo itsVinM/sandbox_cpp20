@@ -1,10 +1,10 @@
-#include <devops/redis_client.hpp>
-#include <devops/sandbox.hpp>
-#include <devops/metrics.hpp>
-#include <devops/health_monitor.hpp>
-#include <devops/log_aggregator.hpp>
-#include <devops/resource_monitor.hpp>
-#include <devops/process_supervisor.hpp>
+#include <redis_client.hpp>
+#include <sandbox.hpp>
+#include <metrics.hpp>
+#include <health_monitor.hpp>
+#include <log_aggregator.hpp>
+#include <resource_monitor.hpp>
+#include <process_supervisor.hpp>
 #include <charconv>
 #include <format>
 #include <iostream>
