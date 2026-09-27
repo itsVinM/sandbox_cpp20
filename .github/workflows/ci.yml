@@ -1,0 +1,92 @@
+name: ci
+
+# The point of this file is that the Docker build *is* the test suite: the
+# `native` stage runs ctest, and the two cross-* stages each fail the build if
+# their target stops compiling. So a green run is a green matrix, and the
+# functional check is the only thing that needs an extra step.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matrix:
+    name: ${{ matrix.stage }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - stage: native      # cmake + ctest
+          - stage: cross-win   # mingw-w64
+          - stage: cross-mac   # zig + macOS SDK
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.stage }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.stage }}
+          push: false
+          cache-from: type=gha,scope=${{ matrix.stage }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.stage }}
+
+  functional:
+    # Needs privileged because it exercises CLONE_NEWPID, CLONE_NEWNET and
+    # cgroup v2 writes for real. Not a container job: GitHub's own container
+    # runners cannot grant the privileges the sandbox needs, so this runs the
+    # compose service on the VM and lets Docker do the privilege escalation.
+    name: functional (namespaces, cgroups v2, seccomp)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check cgroup v2 is available
+        run: |
+          # The functional test is meaningless without a writable cgroup v2 tree,
+          # and a runner without it should say so rather than fail obscurely.
+          if [ "$(stat -fc %T /sys/fs/cgroup)" != "cgroup2fs" ]; then
+            echo "::error::cgroup v2 not mounted; functional test cannot run"
+            exit 1
+          fi
+
+      - name: Run the functional sandbox test
+        run: docker compose run --rm test
+
+  image:
+    name: runtime image
+    runs-on: ubuntu-latest
+    needs: [matrix, functional]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the runtime image and smoke-test the entrypoint
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          push: false
+          load: true
+          tags: devops-sandbox:ci
+          cache-from: type=gha,scope=native
+
+      - name: Entry point responds
+        run: |
+          # Guards the two mistakes an image can hide: a binary that needs a
+          # library missing from the runtime layer, and an entrypoint that
+          # exits non-zero on --help.
+          docker run --rm devops-sandbox:ci --help

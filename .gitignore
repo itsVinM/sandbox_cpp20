@@ -1,3 +1,10 @@
-target/
+# Build output
 sandbox/build/
+**/build-linux/
+compile_commands.json
+
+# Editor / OS
 .vscode/
+.DS_Store
+*.swp
+*.swo

@@ -1,0 +1,57 @@
+# The sandbox's runtime, functional tests and cross-compile matrix.
+#
+#   docker compose build                  # daemon image (runs ctest while building)
+#   docker compose run --rm test          # functional: real namespaces/cgroups/seccomp
+#   docker compose run --rm daemon --help
+#
+# One file, and no source bind mount: the image is built from the sources, so a
+# green build is a real result. Mount the tree only when you want an edit-build
+# loop, and then you own the risk of a stale host build/ directory.
+
+name: devops-sandbox
+
+services:
+  # The daemon. Requires a Redis endpoint to poll for jobs:
+  #   docker compose run --rm daemon --host redis --port 6379
+  daemon:
+    build:
+      context: .
+      target: runtime
+    image: devops-sandbox:latest
+    command: ["--help"]
+
+  # Functional test. This is the only thing that genuinely needs privilege:
+  # clone(CLONE_NEWPID), clone(CLONE_NEWNET) and cgroup v2 writes all require it,
+  # and none of them can be asserted at build time.
+  #
+  # Note: the test image is the *toolchain* image, not the slim runtime image —
+  # it compiles the smoke test against the real sandbox.cpp.
+  test:
+    build:
+      context: .
+      target: native
+    image: devops-sandbox-test:latest
+    privileged: true
+    working_dir: /src
+    command: ["bash", "tests/test_linux.sh"]
+    # Compose has no healthcheck for one-shot jobs, but the daemon benefits:
+    # the metrics endpoint is the cheapest liveness signal it exposes.
+    profiles: ["functional"]
+
+  # Cross-compile checks. Expressed as services so `docker compose build` covers
+  # the whole matrix in one command, and as stages so CI can run them individually.
+  cross-win:
+    build:
+      context: .
+      target: cross-win
+    image: devops-sandbox-cross-win:latest
+    command: ["true"]   # the check happens during the build
+    profiles: ["matrix"]
+
+  cross-mac:
+    build:
+      context: .
+      target: cross-mac
+    image: devops-sandbox-cross-mac:latest
+    command: ["true"]
+    profiles: ["matrix"]

@@ -1,0 +1,14 @@
+# Without this, the build context carries the host's compiler output and the
+# whole .git history.
+sandbox/build/
+**/build/
+**/build-linux/
+.git/
+.github/
+.vscode/
+*.o
+*.exe
+compile_commands.json
+.DS_Store
+*.swp
+*.swo
