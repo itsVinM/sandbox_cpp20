@@ -27,11 +27,11 @@ static void print_usage(const char* prog) {
         "Usage: {} [options]\n"
         "  -h, --host HOST       Redis host (default: 127.0.0.1)\n"
         "  -p, --port PORT       Redis port (default: 1234)\n"
-        "  -i, --id ID           Sandbox ID (default: auto)\n"
+        "  -i, --id ID           Sandbox ID (default: cpp-sandbox-1)\n"
         "  -t, --type TYPE       Target type (default: local)\n"
         "  -m, --metrics-port    Prometheus port (default: 9090)\n"
         "  -n, --no-seccomp      Disable seccomp filter\n"
-        "  --max-restarts N      Max restarts on failure (default: 3)\n"
+        "  -r, --max-restarts N  Max restarts on failure (default: 3)\n"
         "  --help                Show this help\n",
         prog);
 }
