@@ -87,9 +87,17 @@ libstdc++ and pthreads.
 With Docker, nothing but Docker is required on the host:
 
 ```sh
-docker build -t devops-sandbox .        # configures, builds and runs ctest
+docker build --target native -t devops-sandbox .   # configures, builds and runs ctest
+docker build --target runtime -t devops-sandbox .   # the shippable image, ctest as a dependency
 docker run --rm devops-sandbox --help
 ```
+
+Name the target. The stages are ordered `base`, `native`, `cross-win`,
+`cross-mac`, `runtime`, so a bare `docker build .` stops at `runtime` and
+tags the runtime image — which is the useful artefact, but it never runs
+ctest. `--target runtime` still builds `native` first, because it copies the
+binary out of it; the tests run in that step, and their result fails the
+build. `docker compose build` does the same thing.
 
 Bare metal:
 
