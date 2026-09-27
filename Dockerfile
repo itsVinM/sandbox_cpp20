@@ -24,7 +24,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential cmake ninja-build libseccomp-dev \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
-COPY sandbox/ ./
+COPY CMakeLists.txt ./
+COPY devops/ ./devops/
+COPY tests/ ./tests/
 # Tests run as part of the build: a stage that does not compile, or whose ctest
 # fails, never produces an image.
 RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
@@ -40,11 +42,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         g++-mingw-w64-x86-64 \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
-COPY sandbox/include ./include
-COPY sandbox/src/sandbox.cpp ./src/sandbox.cpp
-COPY sandbox/tests/cross_stub_main.cpp ./cross_stub_main.cpp
-RUN x86_64-w64-mingw32-g++-posix -std=c++20 -O2 -I include \
-        cross_stub_main.cpp src/sandbox.cpp -static -o sandbox.exe \
+COPY devops/sandbox.hpp devops/result.hpp ./devops/
+COPY devops/sandbox.cpp ./devops/sandbox.cpp
+COPY tests/cross_stub_main.cpp ./cross_stub_main.cpp
+RUN x86_64-w64-mingw32-g++-posix -std=c++20 -O2 -I . \
+        cross_stub_main.cpp devops/sandbox.cpp -static -o sandbox.exe \
     && file sandbox.exe
 
 # -----------------------------------------------------------------------------
@@ -65,11 +67,11 @@ RUN set -eux; \
     rm /tmp/zig.tar.xz; \
     ln -s /opt/zig/zig /usr/local/bin/zig
 WORKDIR /src
-COPY sandbox/include ./include
-COPY sandbox/src/sandbox.cpp ./src/sandbox.cpp
-COPY sandbox/tests/cross_stub_main.cpp ./cross_stub_main.cpp
-RUN zig c++ -target x86_64-macos -O2 -std=c++20 -I include -c cross_stub_main.cpp \
-    && zig c++ -target x86_64-macos -O2 -std=c++20 -I include -c src/sandbox.cpp \
+COPY devops/sandbox.hpp devops/result.hpp ./devops/
+COPY devops/sandbox.cpp ./devops/sandbox.cpp
+COPY tests/cross_stub_main.cpp ./cross_stub_main.cpp
+RUN zig c++ -target x86_64-macos -O2 -std=c++20 -I . -c cross_stub_main.cpp \
+    && zig c++ -target x86_64-macos -O2 -std=c++20 -I . -c devops/sandbox.cpp \
     && zig c++ -target x86_64-macos -O2 -std=c++20 cross_stub_main.o sandbox.o -o sandbox-mac \
     && file sandbox-mac
 

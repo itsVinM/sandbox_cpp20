@@ -10,18 +10,20 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo "== building project (cmake/ninja) =="
-cmake -S "$root" -B "$root/build-linux" -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build "$root/build-linux" --parallel
+cmake -S "$root" -B "$root/build" -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build "$root/build" --parallel
 
 echo "== ctest =="
-ctest --test-dir "$root/build-linux" --output-on-failure
+ctest --test-dir "$root/build" --output-on-failure
 
 echo "== sandbox_smoke (real namespaces/cgroup/seccomp) =="
-g++ -std=c++20 -I "$root/include" "$root/tests/smoke.cpp" \
-    "$root/src/sandbox.cpp" -o /tmp/sandbox_smoke -lseccomp -pthread
+# -I "$root" because the project root is the include dir: that is what makes
+# <devops/sandbox.hpp> resolve.
+g++ -std=c++20 -I "$root" "$root/tests/smoke.cpp" \
+    "$root/devops/sandbox.cpp" -o /tmp/sandbox_smoke -lseccomp -pthread
 /tmp/sandbox_smoke
 
 echo "== built sandbox executable =="
-"$root/build-linux/sandbox" --help 2>&1 | head -5 || true
+"$root/build/sandbox" --help 2>&1 | head -5 || true
 
 echo "ALL LINUX TESTS DONE"

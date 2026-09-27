@@ -1,8 +1,7 @@
 # Without this, the build context carries the host's compiler output and the
 # whole .git history.
-sandbox/build/
+build/
 **/build/
-**/build-linux/
 .git/
 .github/
 .vscode/

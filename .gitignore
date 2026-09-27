@@ -1,6 +1,5 @@
 # Build output
-sandbox/build/
-**/build-linux/
+build/
 compile_commands.json
 
 # Editor / OS

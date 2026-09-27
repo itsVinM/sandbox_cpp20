@@ -49,7 +49,7 @@ job producer        sandbox daemon                          per-job sandbox
           ◄── job_result (exit_code, duration_ms)
 ```
 
-Job flow, as implemented in `src/main.cpp`:
+Job flow, as implemented in `devops/main.cpp`:
 
 1. register as a sandbox worker (`sandbox register <id> <type> <addr>`)
 2. poll for work (`job next`)
@@ -94,9 +94,9 @@ docker run --rm devops-sandbox --help
 Bare metal:
 
 ```sh
-cmake -S sandbox -B sandbox/build -DCMAKE_BUILD_TYPE=Release
-cmake --build sandbox/build
-./sandbox/build/sandbox --host 127.0.0.1 --port 1234 --id sandbox-1
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+./build/sandbox --host 127.0.0.1 --port 1234 --id sandbox-1
 ```
 
 | Flag            | Description                                  | Default        |
@@ -133,7 +133,7 @@ available on `RedisClient` directly.
 
 ## Configuration
 
-`SandboxConfig` (see `include/devops/sandbox.hpp`):
+`SandboxConfig` (see `devops/sandbox.hpp`):
 
 | Field               | Default        | Meaning                                  |
 | ------------------- | -------------- | ---------------------------------------- |
@@ -164,19 +164,31 @@ docker compose --profile matrix build         # both cross-compile checks
 that one check has to run. It builds the `native` stage, so it re-runs `ctest`
 before the functional smoke test.
 
+Because the test script is baked into the image rather than bind-mounted, pass
+`--build` after editing it: `docker compose run --rm --build test`. A plain
+`docker compose run` reuses whatever image is already tagged, which will happily
+run a stale script.
+
 Deliberately **not** done: the daemon image does not bind-mount the source tree.
 A build from copied sources is a real result; a bind mount over a stale host
 `build/` directory is not. Mount the tree only when you want an edit-build loop.
 
 ## Repository layout
 
+Two source folders, both at the root:
+
 ```
+CMakeLists.txt          the project root is the include dir, so <devops/x.hpp> resolves
 Dockerfile              build stages: native, cross-win, cross-mac, runtime
 compose.yaml            the runtime, the functional test, the matrix
-include/devops/         public headers (sandbox, redis_client, metrics, …)
-src/                    daemon, sandbox engine, sidecars
+devops/                 the daemon and the sandbox engine; each component's .hpp
+                        sits next to its .cpp
 tests/                  unit tests, the cross-compile fixture, the functional test
 ```
+
+`include/` and `src/` are gone: at this size, separating them only meant
+`include/devops/` and `src/` for files that always travel in pairs, and the
+`devops/` name is what the include path already keys off.
 
 ## Known limitations
 

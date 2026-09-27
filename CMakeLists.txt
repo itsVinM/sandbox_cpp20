@@ -6,18 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(sandbox
-    src/main.cpp
-    src/redis_client.cpp
-    src/sandbox.cpp
-    src/seccomp.cpp
-    src/metrics.cpp
-    src/health_monitor.cpp
-    src/log_aggregator.cpp
-    src/resource_monitor.cpp
-    src/process_supervisor.cpp
+    devops/main.cpp
+    devops/redis_client.cpp
+    devops/sandbox.cpp
+    devops/seccomp.cpp
+    devops/metrics.cpp
+    devops/health_monitor.cpp
+    devops/log_aggregator.cpp
+    devops/resource_monitor.cpp
+    devops/process_supervisor.cpp
 )
 
-target_include_directories(sandbox PRIVATE include/)
+target_include_directories(sandbox PRIVATE .)
 
 if(APPLE)
     target_link_libraries(sandbox PRIVATE pthread)
@@ -29,9 +29,9 @@ enable_testing()
 
 add_executable(sandbox_tests
     tests/test_main.cpp
-    src/metrics.cpp
-    src/log_aggregator.cpp)
+    devops/metrics.cpp
+    devops/log_aggregator.cpp)
 
-target_include_directories(sandbox_tests PRIVATE include tests)
+target_include_directories(sandbox_tests PRIVATE . tests)
 
 add_test(NAME sandbox_unit_tests COMMAND sandbox_tests)
